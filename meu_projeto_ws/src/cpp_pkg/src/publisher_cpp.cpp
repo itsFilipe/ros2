@@ -1,12 +1,8 @@
 #include "rclcpp/rclcpp.hpp"
-
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/float32.hpp"
-
 #include <chrono>
-
 #include <string>
-
 #include <memory>
 
 using namespace std::chrono_literals;
@@ -23,6 +19,7 @@ public:
             1s, std::bind(&MinimalPublisher::timer_callback1, this));
         timer2_ = this->create_wall_timer(
             1s, std::bind(&MinimalPublisher::timer_callback2, this));
+        RCLCPP_INFO(this->get_logger(), "Publishers iniciados com sucesso.");
     }
 
 private:

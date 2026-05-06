@@ -3,6 +3,7 @@
 #include "turtlesim/msg/pose.hpp"
 #include <chrono>
 #include <memory>
+#include <sys/ioctl.h> 
 
 #include <fcntl.h>   // Contém a função open() e flags como O_RDWR
 #include <unistd.h>  // Contém as funções read() e close()
@@ -21,29 +22,41 @@ public:
         }
 
         struct termios tty;
+        memset(&tty, 0, sizeof(tty)); // Zera a struct antes de tudo
 
-        // Limpa qualquer lixo que tenha ficado preso no tubo do cabo USB antes de começar
-        tcflush(file_desc_, TCIOFLUSH);
-
-        // Salva as configurações
-        tcsetattr(file_desc_, TCSANOW, &tty);
-
-
-        if(tcgetattr(file_desc_, &tty) != 0) {
+        if (tcgetattr(file_desc_, &tty) != 0) { // 1º: LÊ as configs atuais
             RCLCPP_ERROR(this->get_logger(), "Erro ao ler as configs da porta serial!");
         }
 
+        // 2º: MODIFICA o que precisa
         cfsetospeed(&tty, B9600);
         cfsetispeed(&tty, B9600);
 
-        tty.c_cflag &= ~PARENB; // Sem paridade
-        tty.c_cflag &= ~CSTOPB; // 1 stop bit
+        tty.c_cflag &= ~PARENB;
+        tty.c_cflag &= ~CSTOPB;
         tty.c_cflag &= ~CSIZE;
-        tty.c_cflag |= CS8;     // 8 bits de dados
-        tty.c_lflag |= ICANON; // Mantém a leitura por linha do enter (\n)
-        tty.c_lflag &= ~(ECHO | ECHOE | ECHONL | ISIG); // DESLIGA O ECO E A FOFOCA DO LINUX!
+        tty.c_cflag |= CS8;
+        tty.c_cflag |= CREAD | CLOCAL;
+        tty.c_cflag &= ~HUPCL;
+        tty.c_lflag |= ICANON;
+        tty.c_lflag &= ~(ECHO | ECHOE | ECHONL | ISIG);
+        tty.c_iflag |= IGNCR; 
 
+        // 3º: APLICA as configs corretas
         tcsetattr(file_desc_, TCSANOW, &tty);
+
+        // 4º: Limpa o buffer DEPOIS de configurar
+        tcflush(file_desc_, TCIOFLUSH);
+
+        int flags;
+        ioctl(file_desc_, TIOCMGET, &flags);
+        flags &= ~TIOCM_DTR;
+        ioctl(file_desc_, TIOCMSET, &flags);
+
+        // Espera o Arduino terminar de bootar (caso já tenha resetado)
+        RCLCPP_INFO(this->get_logger(), "Aguardando Arduino inicializar...");
+        sleep(2);
+        tcflush(file_desc_, TCIOFLUSH); // Limpa lixo do boot DEPOIS de esperar
             
         // Criamos un "Publisher" que envia mensagens do tipo Twist no tópico da tartaruga
         publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("/turtle1/cmd_vel", 10);
@@ -67,48 +80,56 @@ public:
 
 private:
     void move_turtle() {
-        char buffer[64]; //porque64?
-
+        char buffer[64]; // 64 bytes: suficiente para um número inteiro como string + '\0'
         int bytes_lidos = read(file_desc_, buffer, sizeof(buffer));
+        if (bytes_lidos <= 0) return;
 
-        if (bytes_lidos > 0) {
-        buffer[bytes_lidos] = '\0'; 
-        
+        buffer[bytes_lidos] = '\0';
         int luz = std::atoi(buffer);
         RCLCPP_INFO(this->get_logger(), "VALOR PURO -> Número: %d | Texto: %s", luz, buffer);
 
         auto message = geometry_msgs::msg::Twist();
 
-        if (luz > 100) {  // Claro!
-            // 1. O GATILHO: Se encostar na parede, enche o tanque de fuga!
-            if (pos_x > 10.0 || pos_x < 1.0 || pos_y > 10.0 || pos_y < 1.0) { 
-                tempo_de_fuga_ = 10; // 10 ciclos de 100ms = 1 Segundo de manobra forçada!
+        if (luz > 100) { // Claro!
+
+            // GATILHO: só ativa a fuga se NÃO estiver já fugindo
+            // Isso evita o re-trigger enquanto a manobra ainda está em curso!
+            if (tempo_de_fuga_ == 0) {
+                if (pos_x > 10.0 || pos_x < 1.0 || pos_y > 10.0 || pos_y < 1.0) {
+                    tempo_de_fuga_ = 20; // 20 ciclos de 100ms = 2 segundos de manobra
+                    RCLCPP_WARN(this->get_logger(), "Borda detectada! Iniciando fuga.");
+                }
             }
 
-            // 2. A EXECUÇÃO DA FUGA: Enquanto o tanque tiver "combustível"...
             if (tempo_de_fuga_ > 0) {
-                message.linear.x = 1.0;  // Anda pra frente
-                message.angular.z = 4.0; // Gira muuuito rápido (Curva em "U" perfeita)
-                
-                write(file_desc_, "R", 1); // SIRENE LIGADA!
-                tempo_de_fuga_--;          // Gasta um ciclo do tanque
-            } 
-            // 3. O PASSEIO TRANQUILO (Só roda se não estiver fugindo)
-            else {
-                message.linear.x = 1.5;  
-                message.angular.z = 0.0; 
+                // FASE 1 (ciclos 20→11): Recua para ganhar espaço
+                if (tempo_de_fuga_ > 10) {
+                    message.linear.x  = -1.0; // Ré!
+                    message.angular.z =  0.0;
+                }
+                // FASE 2 (ciclos 10→1): Gira no lugar (sem andar pra frente)
+                else {
+                    message.linear.x  =  0.0;
+                    message.angular.z =  2.5; // Gira no próprio eixo, sem avançar em círculo
+                }
 
-                write(file_desc_, "V", 1); // VERDE, PAZ!
+                write(file_desc_, "R", 1); // Sirene ligada
+                tempo_de_fuga_--;
+
+            } else {
+                // PASSEIO TRANQUILO
+                message.linear.x  = 1.5;
+                message.angular.z = 0.0;
+                write(file_desc_, "V", 1);
             }
-        } 
-        else {          // Escuro!
-            message.linear.x = 0.0; 
-            message.angular.z = 0.0; 
+
+        } else { // Escuro!
+            message.linear.x  = 0.0;
+            message.angular.z = 0.0;
             RCLCPP_INFO(this->get_logger(), "Está escuro, pare de andar!");
         }
 
         publisher_->publish(message);
-        }
     }
 
     void topic_callback_pose(const turtlesim::msg::Pose::SharedPtr msg) {
