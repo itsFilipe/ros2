@@ -1,0 +1,18 @@
+# ROS 2 Workspaces (Build/Install)
+build/
+install/
+log/
+
+# Projetos de terceiros
+turtlebot3_ws/
+
+# Python / C++ Caches e Arquivos do SO
+__pycache__/
+*.o
+*.so
+*.pyc
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
