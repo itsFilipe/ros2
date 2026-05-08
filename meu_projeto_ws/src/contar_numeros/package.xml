@@ -3,7 +3,7 @@
 <package format="3">
   <name>contar_numeros</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Counter node: publishes a number and subscribes to increment it.</description>
   <maintainer email="lipecs.1111@gmail.com">filipe</maintainer>
   <license>TODO: License declaration</license>
 

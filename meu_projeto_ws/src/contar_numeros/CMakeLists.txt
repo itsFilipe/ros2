@@ -13,8 +13,12 @@ find_package(example_interfaces REQUIRED)
 add_executable(publicar_numero src/publisher_numero.cpp)
 ament_target_dependencies(publicar_numero rclcpp example_interfaces)
 
+add_executable(subscriber_numero src/subscriber_numero.cpp)
+ament_target_dependencies(subscriber_numero rclcpp example_interfaces)
+
 install(TARGETS
   publicar_numero
+  subscriber_numero
   DESTINATION lib/${PROJECT_NAME}
 )
 

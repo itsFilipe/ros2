@@ -15,14 +15,15 @@ public:
 private:
     rclcpp::Publisher<example_interfaces::msg::Int64>::SharedPtr publisher_;
     rclcpp::TimerBase::SharedPtr timer_;
+    int contador_ {0};
 
     void publica_numero() {
         auto numero = example_interfaces::msg::Int64();
-
-        numero.data = 1;
+        contador_++;
+        numero.data = contador_;
 
         //publicar string mostrando o numero que foi postado, ele fez no video um igual.
-        RCLCPP_INFO(this->get_logger(), "Publicando...");
+        RCLCPP_INFO(this->get_logger(), "Publicando o numero %ld", numero.data);
         publisher_->publish(numero);
     }
 };
