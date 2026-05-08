@@ -2,21 +2,34 @@
 
 #include <example_interfaces/msg/int64.hpp> //como eu sei a sintaxe exata?
 
-class PublisherNumero() : public rclcpp::Node {
+using namespace std::chrono_literals;
+
+class PublisherNumero : public rclcpp::Node {
 public: 
     PublisherNumero() : Node("publisher_numero"){
-        publisher_ = this->create_publisher<example_interfaces::msg::int64>("numero", 10);
+        publisher_ = this->create_publisher<example_interfaces::msg::Int64>("numero", 10);
+        timer_ = this->create_wall_timer(0.5s, std::bind(&PublisherNumero::publica_numero, this));
+        RCLCPP_INFO(this->get_logger(), "Publisher iniciado!");
     }
 
 private:
-    rclcpp::Publisher<example_interfaces::msg::int64>::SharedPtr publisher_;
+    rclcpp::Publisher<example_interfaces::msg::Int64>::SharedPtr publisher_;
+    rclcpp::TimerBase::SharedPtr timer_;
 
-    //criar o timer (wall timer) e a funcao que será chamada, a que cria o dado p/ publicar
+    void publica_numero() {
+        auto numero = example_interfaces::msg::Int64();
+
+        numero.data = 1;
+
+        //publicar string mostrando o numero que foi postado, ele fez no video um igual.
+        RCLCPP_INFO(this->get_logger(), "Publicando...");
+        publisher_->publish(numero);
+    }
 };
 
-int main(){
-    rclcpp::init();
-    rclcpp::spin();
+int main(int argc, char * argv[]){
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<PublisherNumero>());
     rclcpp::shutdown();
 
     return 0;
