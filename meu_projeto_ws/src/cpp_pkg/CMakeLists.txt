@@ -9,6 +9,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(example_interfaces REQUIRED)
 
 add_executable(publisher_cpp src/publisher_cpp.cpp)
 ament_target_dependencies(publisher_cpp rclcpp std_msgs)
@@ -16,9 +17,21 @@ ament_target_dependencies(publisher_cpp rclcpp std_msgs)
 add_executable(subscriber_cpp src/subscriber_cpp.cpp)
 ament_target_dependencies(subscriber_cpp rclcpp std_msgs)
 
+add_executable(add_two_ints_server_cpp src/add_two_ints_server.cpp)
+ament_target_dependencies(add_two_ints_server_cpp rclcpp example_interfaces)
+
+add_executable(add_two_ints_client_no_oop src/add_two_ints_client_no_oop.cpp)
+ament_target_dependencies(add_two_ints_client_no_oop rclcpp example_interfaces)
+
+add_executable(add_two_ints_client_cpp src/add_two_ints_client.cpp)
+ament_target_dependencies(add_two_ints_client_cpp rclcpp example_interfaces)
+
 install(TARGETS
   publisher_cpp
   subscriber_cpp
+  add_two_ints_server_cpp
+  add_two_ints_client_no_oop
+  add_two_ints_client_cpp
   DESTINATION lib/${PROJECT_NAME}
 )
 
