@@ -2,7 +2,7 @@
 //estrutura de mensagem
 
 class ClassName : public rclcpp::Node {
-public:
+public: //publisher, timer, subscription are always on constructor?
     ClassName() : Node("node_name") {
 
     }
