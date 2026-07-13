@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(cpp_pkg)
+project(pkg_curso)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -10,6 +10,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(example_interfaces REQUIRED)
+find_package(rcl_interfaces REQUIRED)
 
 add_executable(publisher_cpp src/publisher_cpp.cpp)
 ament_target_dependencies(publisher_cpp rclcpp std_msgs)
@@ -26,12 +27,16 @@ ament_target_dependencies(add_two_ints_client_no_oop rclcpp example_interfaces)
 add_executable(add_two_ints_client_cpp src/add_two_ints_client.cpp)
 ament_target_dependencies(add_two_ints_client_cpp rclcpp example_interfaces)
 
+add_executable(turtlesim_bg_client_cpp src/turtlesim_bg_client.cpp)
+ament_target_dependencies(turtlesim_bg_client_cpp rclcpp rcl_interfaces)
+
 install(TARGETS
   publisher_cpp
   subscriber_cpp
   add_two_ints_server_cpp
   add_two_ints_client_no_oop
   add_two_ints_client_cpp
+  turtlesim_bg_client_cpp
   DESTINATION lib/${PROJECT_NAME}
 )
 
