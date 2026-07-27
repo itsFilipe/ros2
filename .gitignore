@@ -16,3 +16,5 @@ __pycache__/
 # IDEs
 .vscode/
 .idea/
+compile_commands.json
+.clangd

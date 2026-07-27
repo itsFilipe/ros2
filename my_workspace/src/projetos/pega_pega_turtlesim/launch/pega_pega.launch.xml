@@ -1,0 +1,6 @@
+<launch>
+    <node pkg="turtlesim" exec="turtlesim_node" name="turtlesim"/>
+    <node pkg="pega_pega_turtlesim" exec="game_manager" name="game_manager"/>
+    <node pkg="pega_pega_turtlesim" exec="turtle_pegador" name="turtle_pegador"/>
+    <node pkg="pega_pega_turtlesim" exec="turtle_vitima" name="turtle_vitima"/>
+</launch>

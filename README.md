@@ -258,7 +258,7 @@ client_->async_send_request(request, callback);
 
 ```bash
 # 1. Source ROS2 (todo terminal novo)
-source /opt/ros/humble/setup.bash
+source /opt/ros/jazzy/setup.bash
 
 # 2. Build (da raiz do workspace)
 cd ~/Desktop/ros2/my_workspace
