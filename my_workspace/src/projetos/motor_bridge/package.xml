@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>motor_bridge</name>
+  <version>0.0.1</version>
+  <description>
+    Ponte simples entre ROS2 e um motor DC controlado por Arduino via serial USB.
+    Assina /motor_cmd (std_msgs/Int32, -100 a 100) e transmite o comando pela
+    porta serial usando o protocolo texto+newline para o firmware do Arduino.
+  </description>
+  <maintainer email="lipecs.1111@gmail.com">filipe</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- rclcpp: framework C++ do ROS2 -->
+  <depend>rclcpp</depend>
+  <!-- std_msgs: fornece std_msgs/msg/Int32 para o tópico /motor_cmd -->
+  <depend>std_msgs</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
