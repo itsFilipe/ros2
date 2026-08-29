@@ -8,7 +8,8 @@
  *   /motor_cmd (Int32) → callback → formata string → write() na porta serial
  *
  * PROTOCOLO SERIAL:
- *   Texto simples terminado em '\n', ex: "75\n" ou "-50\n" ou "0\n"
+ *   Texto simples terminado em '\n' com dois valores (esquerda,direita).
+ *   Ex: "75,75\n" (frente), "-50,50\n" (girar), "0,0\n" (parar)
  *   Isso permite debugar manualmente com o Serial Monitor da Arduino IDE.
  *
  * SERIAL (termios.h):
@@ -29,7 +30,7 @@
 
 // ── Includes ROS2 ─────────────────────────────────────────────────────────
 #include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/int32.hpp"
+#include "geometry_msgs/msg/twist.hpp"
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  Helpers de porta serial
@@ -168,7 +169,7 @@ public:
     // ARQUITETURA — Por que subscription e não um timer?
     //
     // Este node é puramente REATIVO: só age quando alguém publica em
-    // /motor_cmd. Não há estado interno que precise ser publicado
+    // /cmd_vel. Não há estado interno que precise ser publicado
     // periodicamente. Por isso, uma subscription é a abstração certa.
     //
     // O QoS padrão (rmw_qos_profile_default) é suficiente aqui:
@@ -177,13 +178,13 @@ public:
     // Para controle de motor em tempo real, considere no futuro:
     //   rclcpp::SensorDataQoS() → BEST_EFFORT + KEEP_LAST(1)
     // que descarta mensagens antigas em favor das mais recentes.
-    subscription_ = this->create_subscription<std_msgs::msg::Int32>(
-      "/motor_cmd",
+    subscription_ = this->create_subscription<geometry_msgs::msg::Twist>(
+      "/cmd_vel",
       10,   // queue depth: quantas mensagens ficam em buffer esperando o callback
-      std::bind(&MotorBridgeNode::motor_cmd_callback, this, std::placeholders::_1)
+      std::bind(&MotorBridgeNode::cmd_vel_callback, this, std::placeholders::_1)
     );
 
-    RCLCPP_INFO(this->get_logger(), "motor_bridge_node iniciado. Aguardando /motor_cmd...");
+    RCLCPP_INFO(this->get_logger(), "motor_bridge_node iniciado. Aguardando /cmd_vel...");
 
     // Armazena parâmetros para uso no callback (ex: reabrir porta)
     serial_port_ = port;
@@ -201,24 +202,30 @@ public:
 
 private:
   /**
-   * Callback chamado cada vez que uma mensagem chega em /motor_cmd.
+   * Callback chamado cada vez que uma mensagem chega em /cmd_vel.
    *
    * O ROS2 passa a mensagem como shared_ptr const& para evitar cópia.
-   * Usamos ConstSharedPtr (alias para shared_ptr<const T>) por convenção.
    */
-  void motor_cmd_callback(const std_msgs::msg::Int32::ConstSharedPtr msg)
+  void cmd_vel_callback(const geometry_msgs::msg::Twist::ConstSharedPtr msg)
   {
-    // ── Clampeia o valor recebido ────────────────────────────────────────
-    // Garante que só enviamos valores válidos para o Arduino,
-    // mesmo que alguém publique algo fora do range -100..100.
-    const int value = std::clamp(msg->data, -100, 100);
+    // ── Cinemática Diferencial ────────────────────────────────────────
+    // O pacote teleop_twist_keyboard envia velocidades ao redor de 0.5 a 1.0.
+    // Vamos multiplicar por 100 para converter para nossa escala de PWM (-100 a 100).
+    const float speed_scale = 100.0f;
+    
+    // v_esq = linear.x - angular.z
+    // v_dir = linear.x + angular.z
+    int left  = static_cast<int>((msg->linear.x - msg->angular.z) * speed_scale);
+    int right = static_cast<int>((msg->linear.x + msg->angular.z) * speed_scale);
+
+    // Garante que só enviamos valores válidos para o Arduino
+    left  = std::clamp(left, -100, 100);
+    right = std::clamp(right, -100, 100);
 
     // ── Formata o comando serial ─────────────────────────────────────────
-    // Protocolo: inteiro em ASCII + '\n'
-    // Ex: valor 75  → "75\n"
-    //     valor -50 → "-50\n"
-    //     valor 0   → "0\n"
-    const std::string cmd = std::to_string(value) + "\n";
+    // Protocolo: <esquerda>,<direita>\n
+    // Ex: "75,75\n" ou "-50,50\n"
+    const std::string cmd = std::to_string(left) + "," + std::to_string(right) + "\n";
 
     RCLCPP_DEBUG(this->get_logger(), "Enviando: '%s'", cmd.c_str());
 
@@ -259,7 +266,7 @@ private:
   }
 
   // ── Membros ──────────────────────────────────────────────────────────────
-  rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr subscription_;
+  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr subscription_;
   int serial_fd_;           // file descriptor da porta serial (-1 = fechada)
   std::string serial_port_; // ex: "/dev/ttyACM0"
   int baud_rate_;           // ex: 9600

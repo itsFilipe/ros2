@@ -15,8 +15,10 @@
 
   <!-- rclcpp: framework C++ do ROS2 -->
   <depend>rclcpp</depend>
-  <!-- std_msgs: fornece std_msgs/msg/Int32 para o tópico /motor_cmd -->
+  <!-- std_msgs: fornece std_msgs/msg/Int32 -->
   <depend>std_msgs</depend>
+  <!-- geometry_msgs: fornece geometry_msgs/msg/Twist para controle de movimento -->
+  <depend>geometry_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
