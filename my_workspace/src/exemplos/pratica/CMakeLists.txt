@@ -10,6 +10,8 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(example_interfaces REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 
 add_executable(publisher src/publisher.cpp)
 ament_target_dependencies(publisher rclcpp example_interfaces std_srvs)
@@ -17,9 +19,17 @@ ament_target_dependencies(publisher rclcpp example_interfaces std_srvs)
 add_executable(listener src/listener.cpp)
 ament_target_dependencies(listener rclcpp example_interfaces std_srvs)
 
+add_executable(draw_circle src/draw_circle.cpp)
+ament_target_dependencies(draw_circle rclcpp example_interfaces std_srvs geometry_msgs)
+
+add_executable(obstacle_avoidance src/obstacle_avoidance.cpp)
+ament_target_dependencies(obstacle_avoidance rclcpp geometry_msgs sensor_msgs)
+
 install(TARGETS
   publisher
   listener
+  draw_circle
+  obstacle_avoidance
   DESTINATION lib/${PROJECT_NAME}
 )
 
