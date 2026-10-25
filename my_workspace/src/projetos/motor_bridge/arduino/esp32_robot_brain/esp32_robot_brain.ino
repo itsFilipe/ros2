@@ -51,6 +51,14 @@ void error_loop() {
   }
 }
 
+// Função auxiliar: converte -100..100 (%) em -255..255 (PWM real do Shield)
+// Motores amarelos com caixa de redução precisam de pelo menos ~130 de PWM para vencer o atrito
+int percentToPWM(int pct) {
+  if (pct == 0) return 0;
+  int pwm = map(abs(pct), 1, 100, 130, 255);
+  return (pct > 0) ? pwm : -pwm;
+}
+
 // ── Callback do Tópico /cmd_vel ───────────────────────────────────────────
 // Esta função roda sempre que você pressiona uma tecla no teclado do Ubuntu
 void cmd_vel_callback(const void * msgin)
@@ -58,25 +66,28 @@ void cmd_vel_callback(const void * msgin)
   // Converte o ponteiro genérico para a mensagem Twist
   const geometry_msgs__msg__Twist * twist_msg = (const geometry_msgs__msg__Twist *)msgin;
 
-  // 1. Cinemática Diferencial (Mesma conta que fazíamos no PC)
+  // 1. Cinemática Diferencial em porcentagem (-100% a 100%)
   const float speed_scale = 100.0f;
   
   // v_esq = linear.x - angular.z
   // v_dir = linear.x + angular.z
-  int left  = (int)((twist_msg->linear.x - twist_msg->angular.z) * speed_scale);
-  int right = (int)((twist_msg->linear.x + twist_msg->angular.z) * speed_scale);
+  int left_pct  = (int)((twist_msg->linear.x - twist_msg->angular.z) * speed_scale);
+  int right_pct = (int)((twist_msg->linear.x + twist_msg->angular.z) * speed_scale);
 
-  // 2. Limita para não passar de 100%
-  left  = constrain(left, -100, 100);
-  right = constrain(right, -100, 100);
+  // 2. Limita entre -100% e 100% e converte para PWM real (-255 a 255)
+  left_pct  = constrain(left_pct, -100, 100);
+  right_pct = constrain(right_pct, -100, 100);
+
+  int left_pwm  = percentToPWM(left_pct);
+  int right_pwm = percentToPWM(right_pct);
 
   // 3. Envia para o Arduino via Serial2!
-  // O Arduino espera o formato: "75,75\n"
-  Serial2.printf("%d,%d\n", left, right);
+  // O Arduino recebe o PWM direto (-255 a 255), ex: "192,192\n"
+  Serial2.printf("%d,%d\n", left_pwm, right_pwm);
   
   // Feedback visual e log pro computador (Serial 1)
   digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-  Serial.printf("Recebido! Enviando p/ Arduino: %d,%d\n", left, right);
+  Serial.printf("Recebido! Enviando PWM p/ Arduino: %d,%d\n", left_pwm, right_pwm);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

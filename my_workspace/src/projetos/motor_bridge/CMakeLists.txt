@@ -23,12 +23,17 @@ ament_target_dependencies(motor_bridge_node rclcpp std_msgs geometry_msgs)
 add_executable(motor_demo_node src/motor_demo_node.cpp)
 ament_target_dependencies(motor_demo_node rclcpp std_msgs geometry_msgs)
 
+# --- Node de controle WASD estilo videogame ---
+add_executable(wasd_teleop_node src/wasd_teleop_node.cpp)
+ament_target_dependencies(wasd_teleop_node rclcpp geometry_msgs)
+
 # --- Instalação ---
 # O executável precisa ir para lib/${PROJECT_NAME} para o
 # `ros2 run motor_bridge motor_bridge_node` funcionar.
 install(TARGETS
   motor_bridge_node
   motor_demo_node
+  wasd_teleop_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
