@@ -98,11 +98,13 @@ private:
     if (key_pressed) {
       last_key_time_ = this->now();
       handle_key(c);
-    } else {
-      // Se passou mais de 450ms sem nenhuma tecla pressionada, para o robô sozinho!
-      // (450ms cobre o pequeno atraso inicial de repetição do teclado quando você segura a tecla)
+    } else if (moving_) {
+      // Enquanto estiver dentro da janela de 800ms (cobrindo o delay de auto-repeat do Ubuntu),
+      // continua reenviando o comando a 20Hz para o movimento ficar 100% contínuo!
       double elapsed = (this->now() - last_key_time_).seconds();
-      if (moving_ && elapsed > 0.45) {
+      if (elapsed <= 0.80) {
+        publish_cmd(target_linear_, target_angular_);
+      } else {
         moving_ = false;
         target_linear_ = 0.0;
         target_angular_ = 0.0;

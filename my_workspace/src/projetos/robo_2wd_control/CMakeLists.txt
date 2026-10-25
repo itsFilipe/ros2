@@ -46,6 +46,11 @@ install(DIRECTORY urdf/
   DESTINATION share/${PROJECT_NAME}/urdf
 )
 
+install(PROGRAMS
+  src/web_joystick_node.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 # --- Testes (padrão do workspace) ---
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
