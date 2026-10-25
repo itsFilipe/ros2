@@ -1,7 +1,7 @@
-# ROS2 — Referência Rápida em C++
+# ROS2 — Referência Rápida em C++ e Projetos de Robótica
 
-Este repositório contém exemplos e projetos desenvolvidos durante o aprendizado de ROS2 (Humble).
-Todo o código é escrito em C++ (exceto `velocity_monitor`, que é Python).
+Este repositório contém exemplos e projetos desenvolvidos durante o aprendizado de ROS 2 (Jazzy / Humble).
+Todo o código principal é escrito em C++ (`rclcpp`), incluindo controle de robô real com **ESP32 (micro-ROS) + Arduino** e simulação 3D no **Gazebo (URDF)**.
 
 ---
 
@@ -10,6 +10,7 @@ Todo o código é escrito em C++ (exceto `velocity_monitor`, que é Python).
 ```
 ros2/
 ├── README.md                    ← este arquivo
+├── microros_ws/                 ← workspace do agente micro-ROS (Wi-Fi UDP / Serial)
 ├── my_workspace/
 │   ├── template.cpp             ← esqueleto de nó para copiar
 │   └── src/
@@ -17,7 +18,9 @@ ros2/
 │       │   ├── pkg_curso/       publisher, subscriber, service server/client
 │       │   ├── contar_numeros/  pub+sub contando inteiros
 │       │   └── lidar_node/      publisher de sensor lidar simulado
-│       ├── projetos/            ← aplicações mais completas
+│       ├── projetos/            ← aplicações completas
+│       │   ├── robo_2wd_control/ 🚗 Robô 2WD Real (ESP32+Arduino) + Simulação Gazebo (URDF) + Controle WASD
+│       │   ├── pega_pega_turtlesim/ jogo pega-pega autônomo no Turtlesim
 │       │   ├── battery_led/     bateria + painel LED via service
 │       │   ├── my_first_robot/  walker autônomo com lidar
 │       │   ├── turtlesim_sensor/ bridge Arduino → turtlesim

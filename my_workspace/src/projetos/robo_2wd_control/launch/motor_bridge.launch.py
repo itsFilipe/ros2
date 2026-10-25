@@ -40,7 +40,7 @@ def generate_launch_description():
 
     # ── Definição do node ────────────────────────────────────────────────────
     motor_bridge_node = Node(
-        package="motor_bridge",
+        package="robo_2wd_control",
         executable="motor_bridge_node",
         name="motor_bridge_node",
         output="screen",   # exibe logs no terminal em vez de só em arquivo

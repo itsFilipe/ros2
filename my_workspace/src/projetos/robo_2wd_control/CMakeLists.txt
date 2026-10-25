@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(motor_bridge)
+project(robo_2wd_control)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -37,9 +37,13 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME}
 )
 
-# Instala o launch file para que `ros2 launch motor_bridge ...` funcione.
+# Instala o launch file e o modelo URDF para que `ros2 launch robo_2wd_control ...` funcione.
 install(DIRECTORY launch/
   DESTINATION share/${PROJECT_NAME}/launch
+)
+
+install(DIRECTORY urdf/
+  DESTINATION share/${PROJECT_NAME}/urdf
 )
 
 # --- Testes (padrão do workspace) ---

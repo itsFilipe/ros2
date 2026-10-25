@@ -1,0 +1,258 @@
+<?xml version="1.0"?>
+<!--
+  =============================================================================
+  🤖 MEU CARRINHO 2WD — ARQUIVO URDF COMPLETO (FEITO DO ZERO!)
+  =============================================================================
+  Este arquivo descreve a anatomia física do seu robô 2WD para o ROS 2 e Gazebo.
+  
+  Unidades no ROS 2:
+  - Comprimento: Metros (m) -> ex: 0.20 = 20 cm
+  - Ângulos: Radianos (rad) -> ex: 1.5708 = 90 graus (pi / 2)
+  - Massa: Quilogramas (kg) -> ex: 0.5 = 500 gramas
+
+  Eixos (Regra da Mão Direita):
+  - X: Frente (+) / Trás (-)
+  - Y: Esquerda (+) / Direita (-)
+  - Z: Cima (+) / Baixo (-)
+  =============================================================================
+-->
+<robot name="robo_2wd">
+
+  <!-- ==================== 🎨 PALETA DE CORES (RViz2) ==================== -->
+  <material name="acrilico_azul">
+    <color rgba="0.1 0.5 0.8 0.85"/> <!-- Azul translúcido estilo acrílico -->
+  </material>
+
+  <material name="amarelo_motor">
+    <color rgba="0.95 0.8 0.1 1.0"/> <!-- Amarelo das rodas do kit -->
+  </material>
+
+  <material name="pneu_preto">
+    <color rgba="0.15 0.15 0.15 1.0"/>
+  </material>
+
+  <material name="prata_metal">
+    <color rgba="0.75 0.75 0.75 1.0"/>
+  </material>
+
+  <material name="placa_azul">
+    <color rgba="0.0 0.2 0.7 1.0"/> <!-- Cor do Shield HW-130 / ESP32 -->
+  </material>
+
+
+  <!-- ==================================================================== -->
+  <!-- 1. BASE FOOTPRINT (Ponto 0,0,0 projetado no chão embaixo do robô)    -->
+  <!-- ==================================================================== -->
+  <link name="base_footprint"/>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <!-- Eleva o chassi a 3.3 cm do chão (altura do raio da roda) -->
+    <origin xyz="0.0 0.0 0.033" rpy="0 0 0"/>
+  </joint>
+
+
+  <!-- ==================================================================== -->
+  <!-- 2. CHASSI DE ACRÍLICO (base_link)                                    -->
+  <!-- Medidas aproximadas do seu kit ZK-2WD: 20cm comp x 14cm larg x 1cm   -->
+  <!-- ==================================================================== -->
+  <link name="base_link">
+    <visual>
+      <origin xyz="0.0 0.0 0.01" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.20 0.14 0.015"/>
+      </geometry>
+      <material name="acrilico_azul"/>
+    </visual>
+
+    <!-- Visual extra: Caixinha representando o Arduino + Shield + ESP32 em cima! -->
+    <visual name="eletronica_visual">
+      <origin xyz="-0.02 0.0 0.035" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.09 0.06 0.035"/>
+      </geometry>
+      <material name="placa_azul"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0.0 0.0 0.02" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.20 0.14 0.035"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <origin xyz="0.0 0.0 0.01" rpy="0 0 0"/>
+      <mass value="0.50"/> <!-- 500g (chassi + placas + pilhas 3.7V) -->
+      <inertia ixx="0.00085" ixy="0.0" ixz="0.0"
+               iyy="0.00170" iyz="0.0"
+               izz="0.00248"/>
+    </inertial>
+  </link>
+
+
+  <!-- ==================================================================== -->
+  <!-- 3. RODA ESQUERDA (left_wheel) — Motor M3                             -->
+  <!-- Cilindro com raio = 3.3 cm (0.033m) e largura = 2.6 cm (0.026m)      -->
+  <!-- ==================================================================== -->
+  <link name="left_wheel">
+    <visual>
+      <!-- Rotaciona 90 graus (-1.5708 rad) no eixo X para o cilindro deitar como roda -->
+      <origin xyz="0 0 0" rpy="-1.570796 0 0"/>
+      <geometry>
+        <cylinder radius="0.033" length="0.026"/>
+      </geometry>
+      <material name="amarelo_motor"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="-1.570796 0 0"/>
+      <geometry>
+        <cylinder radius="0.033" length="0.026"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="-1.570796 0 0"/>
+      <mass value="0.05"/> <!-- 50g -->
+      <inertia ixx="0.000016" ixy="0.0" ixz="0.0"
+               iyy="0.000016" iyz="0.0"
+               izz="0.000027"/>
+    </inertial>
+  </link>
+
+  <!-- Junta da Roda Esquerda: tipo "continuous" (gira livremente sem fim) -->
+  <joint name="left_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="left_wheel"/>
+    <!-- Fica 4cm para trás do centro (X = -0.04) e 8.5cm para a esquerda (Y = +0.085) -->
+    <origin xyz="-0.04 0.085 0.0" rpy="0 0 0"/>
+    <!-- Gira em torno do eixo Y (0 1 0) -->
+    <axis xyz="0 1 0"/>
+  </joint>
+
+
+  <!-- ==================================================================== -->
+  <!-- 4. RODA DIREITA (right_wheel) — Motor M4                             -->
+  <!-- ==================================================================== -->
+  <link name="right_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="-1.570796 0 0"/>
+      <geometry>
+        <cylinder radius="0.033" length="0.026"/>
+      </geometry>
+      <material name="amarelo_motor"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="-1.570796 0 0"/>
+      <geometry>
+        <cylinder radius="0.033" length="0.026"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="-1.570796 0 0"/>
+      <mass value="0.05"/>
+      <inertia ixx="0.000016" ixy="0.0" ixz="0.0"
+               iyy="0.000016" iyz="0.0"
+               izz="0.000027"/>
+    </inertial>
+  </link>
+
+  <!-- Junta da Roda Direita -->
+  <joint name="right_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="right_wheel"/>
+    <!-- Fica 4cm para trás do centro (X = -0.04) e 8.5cm para a direita (Y = -0.085) -->
+    <origin xyz="-0.04 -0.085 0.0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+
+  <!-- ==================================================================== -->
+  <!-- 5. RODA BOBA FRONTAL (caster_wheel)                                  -->
+  <!-- Na simulação, modelamos como uma esfera lisa na frente do chassi!    -->
+  <!-- ==================================================================== -->
+  <link name="caster_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.016"/>
+      </geometry>
+      <material name="prata_metal"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.016"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.03"/>
+      <inertia ixx="0.000003" ixy="0.0" ixz="0.0"
+               iyy="0.000003" iyz="0.0"
+               izz="0.000003"/>
+    </inertial>
+  </link>
+
+  <joint name="caster_wheel_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="caster_wheel"/>
+    <!-- Fica na frente do chassi (X = +0.07) e toca o chão (Z = -0.017) -->
+    <origin xyz="0.07 0.0 -0.017" rpy="0 0 0"/>
+  </joint>
+
+
+  <!-- ==================================================================== -->
+  <!-- 6. FÍSICA E PLUGIN DO GAZEBO (O "ESP32 + Arduino" Virtual!)          -->
+  <!-- ==================================================================== -->
+
+  <!-- Atrito zero na roda boba para ela deslizar livremente em qualquer direção -->
+  <gazebo reference="caster_wheel">
+    <mu1>0.001</mu1>
+    <mu2>0.001</mu2>
+  </gazebo>
+
+  <!-- Bom atrito de borracha nas 2 rodas motorizadas -->
+  <gazebo reference="left_wheel">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+  </gazebo>
+
+  <gazebo reference="right_wheel">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+  </gazebo>
+
+  <!-- Plugin Differential Drive do Gazebo Harmonic (ROS 2 Jazzy) -->
+  <gazebo>
+    <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
+      <left_joint>left_wheel_joint</left_joint>
+      <right_joint>right_wheel_joint</right_joint>
+      <!-- Distância entre as duas rodas: 2 * 0.085m = 0.17m (17 cm) -->
+      <wheel_separation>0.17</wheel_separation>
+      <wheel_radius>0.033</wheel_radius>
+      <max_linear_acceleration>2.0</max_linear_acceleration>
+      <!-- Tópico que o Gazebo vai escutar (o mesmo do nosso wasd_teleop_node!) -->
+      <topic>cmd_vel</topic>
+      <odom_topic>odom</odom_topic>
+      <tf_topic>tf</tf_topic>
+      <frame_id>odom</frame_id>
+      <child_frame_id>base_footprint</child_frame_id>
+      <odom_publish_frequency>30</odom_publish_frequency>
+    </plugin>
+
+    <!-- Publica o ângulo de giro das rodas para o RViz2 mostrar elas rodando -->
+    <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
+      <topic>joint_states</topic>
+      <joint_name>left_wheel_joint</joint_name>
+      <joint_name>right_wheel_joint</joint_name>
+    </plugin>
+  </gazebo>
+
+</robot>

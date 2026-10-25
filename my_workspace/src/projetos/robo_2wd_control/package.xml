@@ -1,12 +1,10 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>motor_bridge</name>
-  <version>0.0.1</version>
+  <name>robo_2wd_control</name>
+  <version>0.1.0</version>
   <description>
-    Ponte simples entre ROS2 e um motor DC controlado por Arduino via serial USB.
-    Assina /motor_cmd (std_msgs/Int32, -100 a 100) e transmite o comando pela
-    porta serial usando o protocolo texto+newline para o firmware do Arduino.
+    Controle completo do Robô Móvel 2WD (Real com ESP32/Arduino via micro-ROS e Simulação Gazebo/URDF).
   </description>
   <maintainer email="lipecs.1111@gmail.com">filipe</maintainer>
   <license>Apache-2.0</license>
